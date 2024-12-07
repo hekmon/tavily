@@ -118,17 +118,17 @@ func (sa *SearchAnswer) UnmarshalJSON(data []byte) (err error) {
 	if err = json.Unmarshal(data, &tmp); err != nil {
 		return fmt.Errorf("failed to unmarshal JSON into tmp struct: %w", err)
 	}
-	sa.ResponseTime = time.Duration(tmp.ResponseTime) * time.Second
+	sa.ResponseTime = time.Duration(tmp.ResponseTime * float64(time.Second))
 	return
 }
 
-func (sa *SearchAnswer) MarshalJSON() ([]byte, error) {
+func (sa SearchAnswer) MarshalJSON() ([]byte, error) {
 	type mask SearchAnswer
 	tmp := struct {
-		*mask
+		mask
 		ResponseTime float64 `json:"response_time"`
 	}{
-		mask:         (*mask)(sa),
+		mask:         mask(sa),
 		ResponseTime: sa.ResponseTime.Seconds(),
 	}
 	return json.Marshal(tmp)
@@ -156,14 +156,14 @@ func (sai *SearchAnswerImage) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
-func (sai *SearchAnswerImage) MarshalJSON() ([]byte, error) {
+func (sai SearchAnswerImage) MarshalJSON() ([]byte, error) {
 	type mask SearchAnswerImage
 	tmp := struct {
 		URL string `json:"url"`
-		*mask
+		mask
 	}{
 		URL:  sai.URL.String(),
-		mask: (*mask)(sai),
+		mask: mask(sai),
 	}
 	return json.Marshal(tmp)
 }
@@ -193,14 +193,14 @@ func (sar *SearchAnswerResult) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
-func (sar *SearchAnswerResult) MarshalJSON() ([]byte, error) {
+func (sar SearchAnswerResult) MarshalJSON() ([]byte, error) {
 	type mask SearchAnswerResult
 	tmp := struct {
 		URL string `json:"url"`
-		*mask
+		mask
 	}{
 		URL:  sar.URL.String(),
-		mask: (*mask)(sar),
+		mask: mask(sar),
 	}
 	return json.Marshal(tmp)
 }
