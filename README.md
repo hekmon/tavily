@@ -33,8 +33,41 @@ The client will return an error if the API returns an error status code.
 
 The client will track current session API credits usage thru its stats method/object.
 
-## Installation
+## Usage
+
+### Installation
 
 ```bash
 go get -v github.com/hekmon/tavily
+```
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+
+	"github.com/hekmon/tavily"
+)
+
+func main() {
+	client := tavily.NewClient("<your-tavily-API-key>", nil)
+	answer, err := client.Search(context.TODO(), tavily.SearchQuery{
+		Query:                    "What is Tavily ?",
+		SearchDepth:              tavily.SearchDepthAdvanced,     // optional
+		Topic:                    tavily.SearchQueryTopicGeneral, // optional
+		MaxResults:               3,                              // optional
+		IncludeImages:            true,                           // optional
+		IncludeImageDescriptions: true,                           // optional
+		IncludeAnswer:            true,                           // optional
+		IncludeRawContent:        true,                           // optional
+	})
+	if err != nil {
+		panic(err)
+	}
+    // Do something with the answer
+    // ...
+}
 ```
