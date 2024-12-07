@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -69,7 +70,14 @@ func (c *Client) request(ctx context.Context, endpoint string, payload, response
 		http.StatusMethodNotAllowed, http.StatusUnprocessableEntity, http.StatusTooManyRequests,
 		http.StatusInternalServerError, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
 		// Handle known errors
-		return TavilyAPIError(resp.StatusCode)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			body = []byte(fmt.Sprintf("failed to read response body: %s", err))
+		}
+		return APIError{
+			Code: resp.StatusCode,
+			Body: body,
+		}
 	default:
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
@@ -80,23 +88,13 @@ func (c *Client) request(ctx context.Context, endpoint string, payload, response
 	return
 }
 
-// TavilyAPIError represents a known error from the Tavily API.
+// APIError represents a known error from the Tavily API.
 // https://docs.tavily.com/docs/rest-api/api-reference#error-codes
-type TavilyAPIError int
-
-func (e TavilyAPIError) Error() string {
-	return fmt.Sprintf("Tavily API error: %d %s", int(e), http.StatusText(int(e)))
+type APIError struct {
+	Code int
+	Body []byte
 }
 
-const (
-	TavilyAPIErrorBadRequest           TavilyAPIError = http.StatusBadRequest
-	TavilyAPIErrorUnauthorized         TavilyAPIError = http.StatusUnauthorized
-	TavilyAPIErrorForbidden            TavilyAPIError = http.StatusForbidden
-	TavilyAPIErrorNotFound             TavilyAPIError = http.StatusNotFound
-	TavilyAPIErrorMethodNotAllowed     TavilyAPIError = http.StatusMethodNotAllowed
-	TavilyAPIErrorUnprocessableContent TavilyAPIError = http.StatusUnprocessableEntity
-	TavilyAPIErrorTooManyRequests      TavilyAPIError = http.StatusTooManyRequests
-	TavilyAPIErrorInternalServerError  TavilyAPIError = http.StatusInternalServerError
-	TavilyAPIErrorServiceUnavailable   TavilyAPIError = http.StatusServiceUnavailable
-	TavilyAPIErrorGatewayTimeout       TavilyAPIError = http.StatusGatewayTimeout
-)
+func (e APIError) Error() string {
+	return fmt.Sprintf("Tavily API error: %d %s", e.Code, http.StatusText(e.Code))
+}
