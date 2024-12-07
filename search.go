@@ -29,13 +29,13 @@ func (sq SearchQuery) Validate() error {
 	}
 	// Search Depth
 	switch sq.SearchDepth {
-	case SearchDepthBasic, SearchDepthAdvanced:
+	case SearchDepthBasic, SearchDepthAdvanced, "":
 	default:
 		return errors.New("invalid search depth")
 	}
 	// Topic
 	switch sq.Topic {
-	case SearchQueryTopicGeneral, SearchQueryTopicNews:
+	case SearchQueryTopicGeneral, SearchQueryTopicNews, "":
 	default:
 		return errors.New("invalid topic")
 	}
