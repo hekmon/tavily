@@ -18,10 +18,13 @@ type Client struct {
 	httpClient *http.Client
 }
 
-func NewClient(apiKey string) *Client {
+func NewClient(apiKey string, customHTTPClient *http.Client) *Client {
+	if customHTTPClient == nil {
+		customHTTPClient = cleanhttp.DefaultPooledClient()
+	}
 	return &Client{
 		apiKey:     apiKey,
 		throughput: rate.NewLimiter(rate.Limit(reqPerMinute)/rate.Limit(time.Minute/time.Second), reqPerMinute),
-		httpClient: cleanhttp.DefaultPooledClient(),
+		httpClient: customHTTPClient,
 	}
 }
