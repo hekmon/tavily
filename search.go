@@ -93,6 +93,12 @@ func (c *Client) Search(ctx context.Context, query SearchQuery) (answer SearchAn
 	if err = c.request(ctx, "search", authedQuery, &answer); err != nil {
 		err = fmt.Errorf("failed to execute API query: %w", err)
 	}
+	// Update stats
+	if query.SearchDepth == SearchDepthAdvanced {
+		c.advancedSearches.Add(1)
+	} else {
+		c.basicSearches.Add(1)
+	}
 	return
 }
 

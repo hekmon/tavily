@@ -25,6 +25,8 @@ func (c *Client) Extract(ctx context.Context, urls []string) (answer ExtractAnsw
 	if err = c.request(ctx, "extract", authedQuery, &answer); err != nil {
 		err = fmt.Errorf("failed to execute API query: %w", err)
 	}
+	// Update stats
+	c.extracts.Add(1)
 	return
 }
 
