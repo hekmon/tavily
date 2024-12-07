@@ -61,8 +61,8 @@ func main() {
 		MaxResults:               3,                              // optional
 		IncludeImages:            true,                           // optional
 		IncludeImageDescriptions: true,                           // optional
-		IncludeAnswer:            true,                           // optional
-		IncludeRawContent:        true,                           // optional
+		IncludeAnswer:            true,                           // optional but recommended for LLMs agents
+        // ... others optional params exist
 	})
 	if err != nil {
 		panic(err)
