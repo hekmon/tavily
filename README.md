@@ -10,12 +10,24 @@ These Go bindings implements the [Tavily REST API](https://docs.tavily.com/docs/
 
 All current endpoints are supported:
 
-- [x] [Search](https://docs.tavily.com/docs/rest-api/api-reference#endpoint-post-search)
-- [x] [Extract](https://docs.tavily.com/docs/rest-api/api-reference#endpoint-post-extract)
+- [x] Search
+- [x] Extract
 
 ### Rate Limiting
 
 The client will automatically handle Tavily [rate limiting](https://docs.tavily.com/docs/rest-api/api-reference#rate-limiting) for you.
+
+## Golang types
+
+Every fields of tavily API responses that can be convert to high level Golang types will be converted for ease of use within your code base.
+
+For example: `time.Duration`, `*url.URL`
+
+But they will be reverted to their original type and value if they are marshal again to JSON.
+
+### Error Handling
+
+The client will return an error if the API returns an error status code.
 
 ### API Credits
 
