@@ -32,7 +32,7 @@ func (sq SearchQuery) Validate() error {
 	}
 	// Search Depth
 	switch sq.SearchDepth {
-	case SearchDepthBasic, SearchDepthAdvanced, "":
+	case SearchQueryDepthBasic, SearchQueryDepthAdvanced, "":
 	default:
 		return errors.New("invalid search depth")
 	}
@@ -63,8 +63,8 @@ func (sq SearchQuery) Validate() error {
 type SearchQueryDepth string
 
 const (
-	SearchDepthBasic    SearchQueryDepth = "basic"
-	SearchDepthAdvanced SearchQueryDepth = "advanced"
+	SearchQueryDepthBasic    SearchQueryDepth = "basic"
+	SearchQueryDepthAdvanced SearchQueryDepth = "advanced"
 )
 
 type SearchQueryTopic string
@@ -94,7 +94,7 @@ func (c *Client) Search(ctx context.Context, query SearchQuery) (answer SearchAn
 		err = fmt.Errorf("failed to execute API query: %w", err)
 	}
 	// Update stats
-	if query.SearchDepth == SearchDepthAdvanced {
+	if query.SearchDepth == SearchQueryDepthAdvanced {
 		c.advancedSearches.Add(1)
 	} else {
 		c.basicSearches.Add(1)
