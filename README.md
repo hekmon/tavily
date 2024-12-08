@@ -74,4 +74,4 @@ func main() {
 
 ## OpenAI Tool helper
 
-An [optional package](https://github.com/hekmon/tavily/tree/main/tools) can help you to integrate this Tavily client with the [OpenAI official API bindings](https://github.com/openai/openai-go).
+An [optional package](https://github.com/hekmon/tavily/tree/main/tools) can help you to integrate this Tavily client as a tool with the [OpenAI official API bindings](https://github.com/openai/openai-go).
