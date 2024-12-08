@@ -1,4 +1,4 @@
-# OpenAI Tool helper
+# OpenAI API Tool helper
 
 This package can help you integrate the Tavily client as an OpenAI tool.
 
