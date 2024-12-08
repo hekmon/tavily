@@ -17,7 +17,7 @@ All current endpoints are supported:
 
 The client will automatically handle Tavily [rate limiting](https://docs.tavily.com/docs/rest-api/api-reference#rate-limiting) for you.
 
-## Golang types
+### Golang types
 
 Every fields of tavily API responses that can be convert to high level Golang types will be converted for ease of use within your code base.
 
