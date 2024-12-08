@@ -65,11 +65,18 @@ func (oaist OpenAISearchTool) ActivateTool(ctx context.Context, toolCallID, para
 		err = fmt.Errorf("failed to parse parameters: %w", err)
 		return
 	}
+	var newsDays int
+	if _, ok := parsedParams[OpenAISearchToolParamCategory]; ok && parsedParams[OpenAISearchToolParamCategory] == string(tavily.SearchQueryTopicNews) {
+		newsDays = 7
+	}
 	// Execute the search
 	resp, err := oaist.TavilyClient.Search(ctx, tavily.SearchQuery{
 		Query:         parsedParams[OpenAISearchToolParamQuery],
 		SearchDepth:   tavily.SearchQueryDepth(parsedParams[OpenAISearchToolParamDepth]),
-		IncludeAnswer: true,
+		Topic:         tavily.SearchQueryTopic(parsedParams[OpenAISearchToolParamCategory]),
+		Days:          newsDays,
+		MaxResults:    tavily.SearchMaxPossibleResults,
+		IncludeAnswer: true, // let Tavily summarize the results for us and use it as our final answer
 	})
 	if err != nil {
 		err = fmt.Errorf("failed to perform tavily search: %w", err)

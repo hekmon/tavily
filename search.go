@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+const (
+	SearchMaxPossibleResults = 20
+)
+
 // SearchQuery represents the parameters for a search query.
 // https://docs.tavily.com/docs/rest-api/api-reference#parameters
 type SearchQuery struct {
@@ -52,6 +56,9 @@ func (sq SearchQuery) Validate() error {
 	// Max Results
 	if sq.MaxResults < 0 {
 		return errors.New("max_results must be a non-negative integer")
+	}
+	if sq.MaxResults > SearchMaxPossibleResults {
+		return fmt.Errorf("max_results must be less than or equal to %d", SearchMaxPossibleResults)
 	}
 	// Images descriptions
 	if !sq.IncludeImages && sq.IncludeImageDescriptions {
