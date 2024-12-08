@@ -4,6 +4,21 @@ This package can help you integrate the Tavily client as an OpenAI tool.
 
 ## Exemple
 
+Tested against [Qwen2.5](https://qwen.readthedocs.io/en/latest/index.html) thru [vllm](https://qwen.readthedocs.io/en/latest/deployment/vllm.html) with [function calling](https://qwen.readthedocs.io/en/latest/framework/function_call.html#vllm) activated.
+
+For reference:
+
+```sh
+docker run --rm --runtime nvidia --gpus all \
+    -p 8000:8000 \
+    --ipc=host \
+    vllm/vllm-openai:latest \
+    --model Qwen/Qwen2.5-72B-Instruct-AWQ \
+    --served-model-name Qwen2.5-72B \
+    --gpu-memory-utilization 0.99 \
+    --enable-auto-tool-choice --tool-call-parser hermes
+```
+
 ### Result
 
 ```
@@ -103,7 +118,7 @@ func startConversation() (err error) {
 					}
 					messages = append(messages, msg)
 					fmt.Println("tavily answer:", msg.Content)
-                    fmt.Println()
+					fmt.Println()
 				default:
 					return fmt.Errorf("failed to handle OpenAISearchTool: %w", err)
 				}
