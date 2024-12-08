@@ -102,11 +102,6 @@ func startConversation() (err error) {
 		messages = append(messages, response.Message)
 		// Act based on response
 		switch response.FinishReason {
-		case openai.ChatCompletionChoicesFinishReasonStop:
-			fmt.Println("---------8<----------")
-			fmt.Println("Response:")
-			fmt.Println(response.Message.Content)
-			return
 		case openai.ChatCompletionChoicesFinishReasonToolCalls:
 			for _, tool := range response.Message.ToolCalls {
 				fmt.Println("tool call:", tool.Function.Name, tool.Function.Arguments, tool.ID)
@@ -123,6 +118,11 @@ func startConversation() (err error) {
 					return fmt.Errorf("failed to handle OpenAISearchTool: %w", err)
 				}
 			}
+		case openai.ChatCompletionChoicesFinishReasonStop:
+			fmt.Println("---------8<----------")
+			fmt.Println("Response:")
+			fmt.Println(response.Message.Content)
+			return
 		default:
 			return fmt.Errorf("unexpected finish reason: %s", chatCompletion.Choices[0].FinishReason)
 		}
