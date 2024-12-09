@@ -169,7 +169,7 @@ func startConversation(question string) (err error) {
 			fmt.Println(response.Message.Content)
 			return
 		default:
-			return fmt.Errorf("unexpected finish reason: %s", chatCompletion.Choices[0].FinishReason)
+			return fmt.Errorf("unexpected finish reason: %s", response.FinishReason)
 		}
 	}
 }
