@@ -72,7 +72,7 @@ func (oaist OpenAISearchTool) GetToolParam() openai.ChatCompletionToolParam {
 
 func (oaist OpenAISearchTool) ActivateTool(ctx context.Context, toolCallID, params string) (toolResultMsg openai.ChatCompletionToolMessageParam, err error) {
 	// First parse the parameters
-	parsedParams := make(map[string]string, 2)
+	parsedParams := make(map[string]string, 4)
 	if err = json.Unmarshal([]byte(params), &parsedParams); err != nil {
 		err = fmt.Errorf("failed to parse parameters: %w", err)
 		return
