@@ -27,7 +27,7 @@ But they will be reverted to their original type and value if they are marshal a
 
 ### Error Handling
 
-The client will return an error if the API returns an error status code.
+The client will return a typed error with body content if the API returns a [known API error](https://docs.tavily.com/docs/rest-api/api-reference#error-codes) status code.
 
 ### API Credits
 
