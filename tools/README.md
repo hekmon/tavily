@@ -177,14 +177,14 @@ func startConversation(question string) (err error) {
 func newChatCompletion(ctx context.Context, client *openai.Client, messages []openai.ChatCompletionMessageParamUnion) (*openai.ChatCompletion, error) {
 	return client.Chat.Completions.New(ctx,
 		openai.ChatCompletionNewParams{
-			Model:       openai.F(model),
+			Model:       openai.F("Qwen2.5-72B"),
 			Messages:    openai.F(messages),
 			Tools:       openai.F(availableTools()),
 			N:           openai.F(int64(1)),
-			Temperature: openai.F(temperature),
-			TopP:        openai.F(topP),
+			Temperature: openai.F(0.7), // recommended by Qwen2.5
+			TopP:        openai.F(0.8), // recommended by Qwen2.5
 		},
-		option.WithJSONSet("repetition_penalty", strconv.FormatFloat(repetitionPenalty, 'f', -1, 64)), // extra param for Qwen2.5
+		option.WithJSONSet("repetition_penalty", strconv.FormatFloat(1.05, 'f', -1, 64)), // recommended by Qwen2.5
 	)
 }
 
