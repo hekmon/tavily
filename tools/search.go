@@ -15,11 +15,14 @@ const (
 	OpenAISearchToolName                          = "tavily_web_search"
 	OpenAISearchToolParamQuery                    = "query"
 	OpenAISearchToolParamCategory                 = "category"
-	OpenAISearchToolParamCategoryNewsDays         = 7
 	OpenAISearchToolParamDepth                    = "depth"
 	OpenAISearchToolParamResultFormat             = "result_format"
 	OpenAISearchToolParamResultFormatValueSummary = "summary"
 	OpenAISearchToolParamResultFormatValueRanked  = "ranked"
+)
+
+var (
+	OpenAISearchToolParamCategoryNewsDays = 7
 )
 
 type OpenAISearchTool struct {
