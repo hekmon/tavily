@@ -4,8 +4,8 @@ go 1.23.4
 
 require (
 	github.com/hashicorp/go-cleanhttp v0.5.2
-	github.com/openai/openai-go v0.1.0-alpha.41
-	golang.org/x/time v0.8.0
+	github.com/openai/openai-go v0.1.0-alpha.45
+	golang.org/x/time v0.9.0
 )
 
 require (
