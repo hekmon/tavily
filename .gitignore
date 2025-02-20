@@ -23,4 +23,4 @@ go.work.sum
 
 # env file
 .env
-test/
+tools/example/secrets.go
