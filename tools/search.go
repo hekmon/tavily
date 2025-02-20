@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/hekmon/tavily"
 
@@ -22,10 +23,15 @@ const (
 )
 
 const (
-	SystemPrompt = `You are a helpful assistant. Your primary goal is to answer user queries to the best of your capacities, focusing on providing accurate, relevant, and useful information.
-If you search the web and use one of the results, always link back to the user the original URL to back your claims. Avoid including data that are not directly relevant to the query.
-If there is no relevant data in the search results, simply state it clearly and concisely. Engage in a conversational manner, asking follow-up questions to clarify or deepen the discussion.
-Follow ethical guidelines, ensuring that your responses are not harmful, misleading, or biased. If you are uncertain about an answer or lack sufficient information, clearly state this and suggest ways to find more accurate information.`
+	SystemPrompt = `You are a helpful assistant.
+Your primary goal is to answer user queries to the best of your capacities, focusing on providing accurate, relevant, and useful information.
+If you don't know or if the user query requires up to date informations, use the provided tool to search the web.
+If you do use the tool result, always try to link back the result URL if available to back your claims.
+Never include data from web search result that is not directly relevant to the query.
+If there is no relevant data in the search results, simply state it clearly and concisely.
+Engage in a conversational manner, asking follow-up questions to clarify or deepen the discussion.
+Follow ethical guidelines, ensuring that your responses are not harmful, misleading, or biased.
+If you are uncertain about a search result or lack sufficient information from the user to perform a web search, clearly state this and suggest ways to find more accurate information.`
 )
 
 var (
@@ -68,8 +74,8 @@ func (oaist OpenAISearchTool) GetToolParam() openai.ChatCompletionToolParam {
 					OpenAISearchToolParamResultFormat: map[string]interface{}{
 						"type": "string",
 						"description": fmt.Sprintf(
-							"Determines the format of the search results. Use \"%s\" for complex queries to get all results as XML in a ranked order with scores and original URLs. The default is \"%s\" to get a concise top result.",
-							OpenAISearchToolParamResultFormatValueRanked, OpenAISearchToolParamResultFormatValueSummary,
+							"Determines the format of the search results. The default is \"%s\" to get a unique string with a summarized result. When detailed results or multiples sources are needed use \"%s\": each result will be return as XML in a ranked order with scores and original URLs. Always pay attention to the results' score to determine the relevancy of its content against other results. A XML result object will have the following format: <result><title></title><url></url><score></score><short_description></short_description></result>",
+							OpenAISearchToolParamResultFormatValueSummary, OpenAISearchToolParamResultFormatValueRanked,
 						),
 						"enum": []string{OpenAISearchToolParamResultFormatValueSummary, OpenAISearchToolParamResultFormatValueRanked},
 					},
@@ -124,8 +130,8 @@ func (oaist OpenAISearchTool) ActivateTool(ctx context.Context, toolCallID, para
 		for i, result := range resp.Results {
 			results[i] = openai.ChatCompletionContentPartTextParam{
 				Type: openai.F(openai.ChatCompletionContentPartTextTypeText),
-				Text: openai.F(fmt.Sprintf("<result><title>%s</title><url>%s</url><score>%f</score><content>%s</content></result>",
-					result.Title, result.URL, result.Score, result.Content,
+				Text: openai.F(fmt.Sprintf("<result><title>%s</title><url>%s</url><score>%f</score><short_description>%s</short_description></result>",
+					result.Title, result.URL, result.Score, strings.Replace(result.Content, "\n", "\\n", -1),
 				)),
 			}
 		}

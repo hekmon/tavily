@@ -18,6 +18,11 @@ var (
 	TavilyTool tavilytools.OpenAISearchTool
 )
 
+const (
+	// question = "What is Tavily? What do they offer? Be specific and do not omit anything. Did they announce something recently?"
+	question = "Why is the launch of the NVIDIA GeForce RTX 5000 serie so catastrophic? search the web"
+)
+
 func main() {
 	// Init clients
 	OAIClient = openai.NewClient(
@@ -26,8 +31,8 @@ func main() {
 	)
 	TavilyTool.TavilyClient = tavily.NewClient(tavilyKey, nil)
 
-	// Use them
-	err := startConversation("What is Tavily? What do they offer? Be specific and do not omit anything. Did they announce something recently?")
+	// Start
+	err := startConversation(question)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
@@ -60,7 +65,9 @@ func startConversation(question string) (err error) {
 		switch response.FinishReason {
 		case openai.ChatCompletionChoicesFinishReasonToolCalls:
 			fmt.Println("Received", len(response.Message.ToolCalls), "tool call request(s)")
+			fmt.Println()
 			// TODO: parallelize to speed up time to first token for the user
+			// but beware of including results in the same order as tools calls ! Tools call IDs are not always respected/used in my experience.
 			for _, tool := range response.Message.ToolCalls {
 				fmt.Println("tool call:", tool.Function.Name, tool.Function.Arguments, tool.ID)
 				switch tool.Function.Name {
@@ -70,11 +77,14 @@ func startConversation(question string) (err error) {
 						return fmt.Errorf("failed to activate Tavily OpenAISearchTool: %w", err)
 					}
 					messages = append(messages, msg)
-					fmt.Println("tavily answer:", msg.Content)
-					fmt.Println()
+					fmt.Println("tavily answer:")
+					for _, response := range msg.Content.Value {
+						fmt.Println(response.Text.Value)
+					}
 				default:
 					return fmt.Errorf("failed to handle OpenAISearchTool: %w", err)
 				}
+				fmt.Println()
 			}
 		case openai.ChatCompletionChoicesFinishReasonStop:
 			fmt.Println("---------8<----------")
@@ -90,7 +100,8 @@ func startConversation(question string) (err error) {
 func newChatCompletion(ctx context.Context, client *openai.Client, messages []openai.ChatCompletionMessageParamUnion) (*openai.ChatCompletion, error) {
 	return client.Chat.Completions.New(ctx,
 		openai.ChatCompletionNewParams{
-			Model:       openai.F("Qwen2.5-72B"),
+			// Model:       openai.F("Qwen2.5-72B"),
+			Model:       openai.F("IG1 GPT"),
 			Messages:    openai.F(messages),
 			Tools:       openai.F(availableTools()),
 			N:           openai.F(int64(1)),
