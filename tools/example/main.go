@@ -72,7 +72,7 @@ func startConversation(question string) (err error) {
 				fmt.Println("tool call:", tool.Function.Name, tool.Function.Arguments, tool.ID)
 				switch tool.Function.Name {
 				case tavilytools.OpenAISearchToolName:
-					msg, err := TavilyTool.ActivateTool(ctx, tool.ID, tool.Function.Arguments)
+					msg, err := TavilyTool.Search(ctx, tool.ID, tool.Function.Arguments)
 					if err != nil {
 						return fmt.Errorf("failed to activate Tavily OpenAISearchTool: %w", err)
 					}
@@ -114,6 +114,6 @@ func newChatCompletion(ctx context.Context, client *openai.Client, messages []op
 
 func availableTools() []openai.ChatCompletionToolParam {
 	return []openai.ChatCompletionToolParam{
-		TavilyTool.GetToolParam(),
+		TavilyTool.GetSearchToolParam(),
 	}
 }
