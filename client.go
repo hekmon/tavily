@@ -48,17 +48,25 @@ type Client struct {
 	throughput *rate.Limiter
 	httpClient *http.Client
 	// Stats
+	statsCounter
+}
+
+func (c *Client) Stats() (s Stats) {
+	return c.statsCounter.Stats()
+}
+
+type statsCounter struct {
 	basicSearches    atomic.Int64
 	advancedSearches atomic.Int64
 	basicExtracts    atomic.Int64
 	advancedExtracts atomic.Int64
 }
 
-func (c *Client) SessionStats() (s Stats) {
-	s.BasicSearches = int(c.basicSearches.Load())
-	s.AdvancedSearches = int(c.advancedSearches.Load())
-	s.BasicExtracts = int(c.basicExtracts.Load())
-	s.AdvancedExtracts = int(c.advancedExtracts.Load())
+func (sc *statsCounter) Stats() (s Stats) {
+	s.BasicSearches = int(sc.basicSearches.Load())
+	s.AdvancedSearches = int(sc.advancedSearches.Load())
+	s.BasicExtracts = int(sc.basicExtracts.Load())
+	s.AdvancedExtracts = int(sc.advancedExtracts.Load())
 	return
 }
 
@@ -69,8 +77,32 @@ type Stats struct {
 	AdvancedExtracts int
 }
 
-// APICredits will return the API credits costs of the stats.
-// https://docs.tavily.com/guides/api-credits
-func (s Stats) APICreditsCost() float64 {
-	return float64(s.BasicSearches) + float64(s.AdvancedSearches*2) + float64(s.BasicExtracts)/5 + (float64(s.AdvancedExtracts)/5)*2
+// BasicSearchesCost will return the API credits cost of the basic searches.
+// See https://docs.tavily.com/guides/api-credits for more infos.
+func (s Stats) BasicSearchesCost() float64 {
+	return float64(s.BasicSearches)
+}
+
+// AdvancedSearchesCost will return the API credits cost of the advanced searches.
+// See https://docs.tavily.com/guides/api-credits for more infos.
+func (s Stats) AdvancedSearchesCost() float64 {
+	return float64(s.AdvancedSearches) * 2
+}
+
+// BasicExtractsCost will return the API credits cost of the basic extracts.
+// See https://docs.tavily.com/guides/api-credits for more infos.
+func (s Stats) BasicExtractsCost() float64 {
+	return float64(s.BasicExtracts) / 5
+}
+
+// AdvancedExtractsCost will return the API credits cost of the advanced extracts.
+// See https://docs.tavily.com/guides/api-credits for more infos.
+func (s Stats) AdvancedExtractsCost() float64 {
+	return (float64(s.AdvancedExtracts) / 5) * 2
+}
+
+// TotalCost will return the total API credits cost of all the searches and extracts.
+// See https://docs.tavily.com/guides/api-credits for more infos.
+func (s Stats) TotalCost() float64 {
+	return s.BasicSearchesCost() + s.AdvancedSearchesCost() + s.BasicExtractsCost() + s.AdvancedExtractsCost()
 }
