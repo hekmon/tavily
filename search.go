@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	// SearchMaxPossibleResults is the maximum results a search query can request, see https://docs.tavily.com/api-reference/endpoint/search#body-max-results
 	SearchMaxPossibleResults = 20
 )
 
@@ -81,11 +82,6 @@ const (
 	SearchQueryTopicNews    SearchQueryTopic = "news"
 )
 
-type searchQueryAuth struct {
-	APIKey string `json:"api_key"`
-	SearchQuery
-}
-
 // Execute a search query using Tavily Search.
 // See https://docs.tavily.com/api-reference/endpoint/search for more information.
 func (c *mainClient) Search(ctx context.Context, query SearchQuery) (answer SearchAnswer, err error) {
@@ -94,12 +90,8 @@ func (c *mainClient) Search(ctx context.Context, query SearchQuery) (answer Sear
 		err = fmt.Errorf("failed to validate search query: %w", err)
 		return
 	}
-	authedQuery := searchQueryAuth{
-		APIKey:      c.apiKey,
-		SearchQuery: query,
-	}
 	// Execute
-	if err = c.request(ctx, "search", authedQuery, &answer); err != nil {
+	if err = c.request(ctx, "search", query, &answer); err != nil {
 		err = fmt.Errorf("failed to execute API query: %w", err)
 	}
 	return

@@ -43,6 +43,7 @@ func (c *mainClient) request(ctx context.Context, endpoint string, payload, resp
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	if payload != nil {
 		req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	}

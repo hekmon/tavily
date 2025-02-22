@@ -21,11 +21,6 @@ type ExtractRequest struct {
 	ExtractDepth  ExtractRequestDepth `json:"extract_depth,omitempty"`
 }
 
-type extractRequestAuth struct {
-	APIKey string `json:"api_key"`
-	ExtractRequest
-}
-
 // Extract web page content from one or more specified URLs using Tavily Extract.
 // See https://docs.tavily.com/api-reference/endpoint/extract for more infos.
 func (c *mainClient) Extract(ctx context.Context, request ExtractRequest) (answer ExtractAnswer, err error) {
@@ -35,13 +30,8 @@ func (c *mainClient) Extract(ctx context.Context, request ExtractRequest) (answe
 			return answer, fmt.Errorf("invalid URL %q: %w", u, err)
 		}
 	}
-	// Prepare query
-	authedRequest := extractRequestAuth{
-		APIKey:         c.apiKey,
-		ExtractRequest: request,
-	}
 	// Execute
-	if err = c.request(ctx, "extract", authedRequest, &answer); err != nil {
+	if err = c.request(ctx, "extract", request, &answer); err != nil {
 		err = fmt.Errorf("failed to execute API query: %w", err)
 	}
 	return
