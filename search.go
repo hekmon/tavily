@@ -15,7 +15,6 @@ const (
 )
 
 // SearchQuery represents the parameters for a search query.
-// https://docs.tavily.com/docs/rest-api/api-reference#parameters
 type SearchQuery struct {
 	Query                    string                   `json:"query"`                                // The search query you want to execute with Tavily.
 	Topic                    SearchQueryTopic         `json:"topic,omitempty"`                      // The category of the search. This will determine which of our agents will be used for the search. Currently: only "general" and "news" are supported. Default is "general".
