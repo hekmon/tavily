@@ -86,7 +86,9 @@ type searchQueryAuth struct {
 	SearchQuery
 }
 
-func (c *Client) Search(ctx context.Context, query SearchQuery) (answer SearchAnswer, err error) {
+// Execute a search query using Tavily Search.
+// See https://docs.tavily.com/api-reference/endpoint/search for more information.
+func (c *mainClient) Search(ctx context.Context, query SearchQuery) (answer SearchAnswer, err error) {
 	// Prepare query
 	if err = query.Validate(); err != nil {
 		err = fmt.Errorf("failed to validate search query: %w", err)
@@ -99,12 +101,6 @@ func (c *Client) Search(ctx context.Context, query SearchQuery) (answer SearchAn
 	// Execute
 	if err = c.request(ctx, "search", authedQuery, &answer); err != nil {
 		err = fmt.Errorf("failed to execute API query: %w", err)
-	}
-	// Update stats
-	if query.SearchDepth == SearchQueryDepthAdvanced {
-		c.advancedSearches.Add(1)
-	} else {
-		c.basicSearches.Add(1)
 	}
 	return
 }

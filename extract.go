@@ -17,8 +17,8 @@ const (
 
 type ExtractRequest struct {
 	URLs          []string            `json:"urls"`
-	IncludeImages bool                `json:"include_images"`
-	ExtractDepth  ExtractRequestDepth `json:"extract_depth"`
+	IncludeImages bool                `json:"include_images,omitempty"`
+	ExtractDepth  ExtractRequestDepth `json:"extract_depth,omitempty"`
 }
 
 type extractRequestAuth struct {
@@ -26,32 +26,14 @@ type extractRequestAuth struct {
 	ExtractRequest
 }
 
-// Extract retrieve raw web content from specified URLs.
-// https://docs.tavily.com/docs/rest-api/api-reference#endpoint-post-extract
-func (c *Client) Extract(ctx context.Context, request ExtractRequest) (answer ExtractAnswer, err error) {
+// Extract web page content from one or more specified URLs using Tavily Extract.
+// See https://docs.tavily.com/api-reference/endpoint/extract for more infos.
+func (c *mainClient) Extract(ctx context.Context, request ExtractRequest) (answer ExtractAnswer, err error) {
 	// Validate URLs
 	for _, u := range request.URLs {
 		if _, err := url.ParseRequestURI(u); err != nil {
 			return answer, fmt.Errorf("invalid URL %q: %w", u, err)
 		}
-	}
-	// Handle extraction depth
-	switch request.ExtractDepth {
-	case "":
-		// set default
-		request.ExtractDepth = ExtractRequestDepthBasic
-		fallthrough
-	case ExtractRequestDepthBasic:
-		defer func() {
-			c.basicExtracts.Add(int64(len(answer.Results)))
-		}()
-	case ExtractRequestDepthAdvanced:
-		defer func() {
-			c.advancedExtracts.Add(int64(len(answer.Results)))
-		}()
-	default:
-		err = fmt.Errorf("invalid extract depth %q", request.ExtractDepth)
-		return
 	}
 	// Prepare query
 	authedRequest := extractRequestAuth{

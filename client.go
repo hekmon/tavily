@@ -1,108 +1,76 @@
 package tavily
 
 import (
+	"context"
 	"net/http"
-	"sync/atomic"
 	"time"
 
 	"github.com/hashicorp/go-cleanhttp"
 	"golang.org/x/time/rate"
 )
 
+type Client interface {
+	Search(context.Context, SearchQuery) (SearchAnswer, error)
+	Extract(context.Context, ExtractRequest) (ExtractAnswer, error)
+	// Stats return the number of searchs (basic and advanced) as well as extract (basic and advanced) this client has performed.
+	Stats() Stats
+	// Create a child client for a specific session. This is useful for tracking stats per session. Parent stats will include child stats.
+	NewSession() Client
+}
+
 const (
-	// Rate Limiting https://docs.tavily.com/guides/rate-limits
-	reqPerMinuteDev  = 100
-	reqPerMinuteProd = 1000
+	// ReqPerMinuteDev represents the number of requests a Development API key can made per minute. For more information see https://docs.tavily.com/guides/rate-limits
+	ReqPerMinuteDev = 100
+	// ReqPerMinuteProd represents the number of requests a Production API key can made per minute. For more information see https://docs.tavily.com/guides/rate-limits
+	ReqPerMinuteProd = 1000
 )
 
+// APIKeyType represents the type of API key used.
 type APIKeyType string
 
 const (
-	APIKeyTypeDev  APIKeyType = "dev"
+	// APIKeyTypeDev represents a development API key.
+	APIKeyTypeDev APIKeyType = "dev"
+	// APIKeyTypeProd represents a production API key.
 	APIKeyTypeProd APIKeyType = "prod"
 )
 
-func NewClient(APIKey string, keyType APIKeyType, customHTTPClient *http.Client) *Client {
+func NewClient(APIKey string, keyType APIKeyType, customHTTPClient *http.Client) Client {
 	var reqPerMinute int
 	switch keyType {
 	case APIKeyTypeDev:
-		reqPerMinute = reqPerMinuteDev
+		reqPerMinute = ReqPerMinuteDev
 	case APIKeyTypeProd:
-		reqPerMinute = reqPerMinuteProd
+		reqPerMinute = ReqPerMinuteProd
 	default:
-		reqPerMinute = reqPerMinuteDev
+		reqPerMinute = ReqPerMinuteDev
 	}
 	if customHTTPClient == nil {
 		customHTTPClient = cleanhttp.DefaultPooledClient()
 	}
-	return &Client{
+	mc := &mainClient{
 		apiKey:     APIKey,
 		throughput: rate.NewLimiter(rate.Limit(reqPerMinute)/rate.Limit(time.Minute/time.Second), reqPerMinute),
 		httpClient: customHTTPClient,
 	}
+	return mc.NewSession()
 }
 
-type Client struct {
+type mainClient struct {
 	apiKey string
 	// Controllers
 	throughput *rate.Limiter
 	httpClient *http.Client
-	// Stats
-	statsCounter
 }
 
-func (c *Client) Stats() (s Stats) {
-	return c.statsCounter.Stats()
+// main client does not hold stats as it is never returned directly to the client (a session is), just implementing interface here
+func (c *mainClient) Stats() Stats {
+	return Stats{}
 }
 
-type statsCounter struct {
-	basicSearches    atomic.Int64
-	advancedSearches atomic.Int64
-	basicExtracts    atomic.Int64
-	advancedExtracts atomic.Int64
-}
-
-func (sc *statsCounter) Stats() (s Stats) {
-	s.BasicSearches = int(sc.basicSearches.Load())
-	s.AdvancedSearches = int(sc.advancedSearches.Load())
-	s.BasicExtracts = int(sc.basicExtracts.Load())
-	s.AdvancedExtracts = int(sc.advancedExtracts.Load())
-	return
-}
-
-type Stats struct {
-	BasicSearches    int
-	AdvancedSearches int
-	BasicExtracts    int
-	AdvancedExtracts int
-}
-
-// BasicSearchesCost will return the API credits cost of the basic searches.
-// See https://docs.tavily.com/guides/api-credits for more infos.
-func (s Stats) BasicSearchesCost() float64 {
-	return float64(s.BasicSearches)
-}
-
-// AdvancedSearchesCost will return the API credits cost of the advanced searches.
-// See https://docs.tavily.com/guides/api-credits for more infos.
-func (s Stats) AdvancedSearchesCost() float64 {
-	return float64(s.AdvancedSearches) * 2
-}
-
-// BasicExtractsCost will return the API credits cost of the basic extracts.
-// See https://docs.tavily.com/guides/api-credits for more infos.
-func (s Stats) BasicExtractsCost() float64 {
-	return float64(s.BasicExtracts) / 5
-}
-
-// AdvancedExtractsCost will return the API credits cost of the advanced extracts.
-// See https://docs.tavily.com/guides/api-credits for more infos.
-func (s Stats) AdvancedExtractsCost() float64 {
-	return (float64(s.AdvancedExtracts) / 5) * 2
-}
-
-// TotalCost will return the total API credits cost of all the searches and extracts.
-// See https://docs.tavily.com/guides/api-credits for more infos.
-func (s Stats) TotalCost() float64 {
-	return s.BasicSearchesCost() + s.AdvancedSearchesCost() + s.BasicExtractsCost() + s.AdvancedExtractsCost()
+// creates a root session for this client
+func (c *mainClient) NewSession() Client {
+	return &session{
+		client: c,
+	}
 }

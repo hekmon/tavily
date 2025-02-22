@@ -27,7 +27,7 @@ func init() {
 	}
 }
 
-func (c *Client) request(ctx context.Context, endpoint string, payload, response any) (err error) {
+func (c *mainClient) request(ctx context.Context, endpoint string, payload, response any) (err error) {
 	// Prepare payload
 	var body bytes.Buffer
 	if payload != nil {
