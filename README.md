@@ -53,7 +53,7 @@ import (
 )
 
 func main() {
-	client := tavily.NewClient("<your-tavily-API-key>", nil)
+	client := tavily.NewClient("<your-tavily-API-key>", tavily.APIKeyTypeDev, nil)
 	answer, err := client.Search(context.TODO(), tavily.SearchQuery{
 		Query:                    "What is Tavily ?",
 		SearchDepth:              tavily.SearchDepthAdvanced,     // optional

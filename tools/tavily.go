@@ -51,7 +51,7 @@ var (
 )
 
 type OpenAISearchTool struct {
-	TavilyClient *tavily.Client
+	TavilyClient tavily.Client
 	SearchDepth  tavily.SearchQueryDepth
 }
 
