@@ -32,24 +32,27 @@ type Client struct {
 	// Stats
 	basicSearches    atomic.Int64
 	advancedSearches atomic.Int64
-	extracts         atomic.Int64
+	basicExtracts    atomic.Int64
+	advancedExtracts atomic.Int64
 }
 
 func (c *Client) SessionStats() (s Stats) {
 	s.BasicSearches = int(c.basicSearches.Load())
 	s.AdvancedSearches = int(c.advancedSearches.Load())
-	s.Extracts = int(c.extracts.Load())
+	s.BasicExtracts = int(c.basicExtracts.Load())
+	s.AdvancedExtracts = int(c.advancedExtracts.Load())
 	return
 }
 
 type Stats struct {
 	BasicSearches    int
 	AdvancedSearches int
-	Extracts         int
+	BasicExtracts    int
+	AdvancedExtracts int
 }
 
 // APICredits will return the API credits costs of the stats.
-// https://docs.tavily.com/docs/rest-api/api-reference#tavily-api-credit-deduction-overview
+// https://docs.tavily.com/guides/api-credits
 func (s Stats) APICreditsCost() int {
-	return s.BasicSearches + s.AdvancedSearches*2 + s.Extracts/5
+	return s.BasicSearches + s.AdvancedSearches*2 + s.BasicExtracts/5 + (s.AdvancedExtracts/5)*2
 }

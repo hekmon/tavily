@@ -8,25 +8,60 @@ import (
 	"time"
 )
 
-type extractRequest struct {
-	APIKey string   `json:"api_key"`
-	URLs   []string `json:"urls"`
+type ExtractRequestDepth string
+
+const (
+	ExtractRequestDepthBasic    ExtractRequestDepth = "basic"
+	ExtractRequestDepthAdvanced ExtractRequestDepth = "advanced"
+)
+
+type ExtractRequest struct {
+	URLs          []string            `json:"urls"`
+	IncludeImages bool                `json:"include_images"`
+	ExtractDepth  ExtractRequestDepth `json:"extract_depth"`
+}
+
+type extractRequestAuth struct {
+	APIKey string `json:"api_key"`
+	ExtractRequest
 }
 
 // Extract retrieve raw web content from specified URLs.
 // https://docs.tavily.com/docs/rest-api/api-reference#endpoint-post-extract
-func (c *Client) Extract(ctx context.Context, urls []string) (answer ExtractAnswer, err error) {
+func (c *Client) Extract(ctx context.Context, request ExtractRequest) (answer ExtractAnswer, err error) {
+	// Validate URLs
+	for _, u := range request.URLs {
+		if _, err := url.ParseRequestURI(u); err != nil {
+			return answer, fmt.Errorf("invalid URL %q: %w", u, err)
+		}
+	}
+	// Handle extraction depth
+	switch request.ExtractDepth {
+	case "":
+		// set default
+		request.ExtractDepth = ExtractRequestDepthBasic
+		fallthrough
+	case ExtractRequestDepthBasic:
+		defer func() {
+			c.basicExtracts.Add(int64(len(answer.Results)))
+		}()
+	case ExtractRequestDepthAdvanced:
+		defer func() {
+			c.advancedExtracts.Add(int64(len(answer.Results)))
+		}()
+	default:
+		err = fmt.Errorf("invalid extract depth %q", request.ExtractDepth)
+		return
+	}
 	// Prepare query
-	authedQuery := extractRequest{
-		APIKey: c.apiKey,
-		URLs:   urls,
+	authedRequest := extractRequestAuth{
+		APIKey:         c.apiKey,
+		ExtractRequest: request,
 	}
 	// Execute
-	if err = c.request(ctx, "extract", authedQuery, &answer); err != nil {
+	if err = c.request(ctx, "extract", authedRequest, &answer); err != nil {
 		err = fmt.Errorf("failed to execute API query: %w", err)
 	}
-	// Update stats
-	c.extracts.Add(1)
 	return
 }
 
