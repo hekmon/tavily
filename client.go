@@ -71,6 +71,6 @@ func (c *mainClient) Stats() Stats {
 // creates a root session for this client
 func (c *mainClient) NewSession() Client {
 	return &session{
-		client: c,
+		parent: c,
 	}
 }

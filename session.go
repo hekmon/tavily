@@ -7,14 +7,14 @@ import (
 
 // session is a sub client that allows to track API usage for a specific session. Instanciate it from the original client.
 type session struct {
-	client Client
+	parent Client
 	statsCounter
 }
 
 // Execute a search query using Tavily Search.
 // See https://docs.tavily.com/api-reference/endpoint/search for more information.
 func (s *session) Search(ctx context.Context, query SearchQuery) (answer SearchAnswer, err error) {
-	if answer, err = s.client.Search(ctx, query); err != nil {
+	if answer, err = s.parent.Search(ctx, query); err != nil {
 		return
 	}
 	switch query.SearchDepth {
@@ -29,7 +29,7 @@ func (s *session) Search(ctx context.Context, query SearchQuery) (answer SearchA
 // Extract web page content from one or more specified URLs using Tavily Extract.
 // See https://docs.tavily.com/api-reference/endpoint/extract for more infos.
 func (s *session) Extract(ctx context.Context, request ExtractRequest) (answer ExtractAnswer, err error) {
-	if answer, err = s.client.Extract(ctx, request); err != nil {
+	if answer, err = s.parent.Extract(ctx, request); err != nil {
 		return
 	}
 	switch request.ExtractDepth {
@@ -44,7 +44,7 @@ func (s *session) Extract(ctx context.Context, request ExtractRequest) (answer E
 // Create a child client for a new specific session. This is useful for tracking stats per session.
 func (s *session) NewSession() Client {
 	return &session{
-		client: s,
+		parent: s,
 	}
 }
 
