@@ -71,6 +71,6 @@ type Stats struct {
 
 // APICredits will return the API credits costs of the stats.
 // https://docs.tavily.com/guides/api-credits
-func (s Stats) APICreditsCost() int {
-	return s.BasicSearches + s.AdvancedSearches*2 + s.BasicExtracts/5 + (s.AdvancedExtracts/5)*2
+func (s Stats) APICreditsCost() float64 {
+	return float64(s.BasicSearches) + float64(s.AdvancedSearches*2) + float64(s.BasicExtracts)/5 + (float64(s.AdvancedExtracts)/5)*2
 }
