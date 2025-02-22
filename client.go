@@ -10,15 +10,33 @@ import (
 )
 
 const (
-	reqPerMinute = 100 // https://docs.tavily.com/docs/rest-api/api-reference#rate-limiting
+	// Rate Limiting https://docs.tavily.com/guides/rate-limits
+	reqPerMinuteDev  = 100
+	reqPerMinuteProd = 1000
 )
 
-func NewClient(apiKey string, customHTTPClient *http.Client) *Client {
+type APIKeyType string
+
+const (
+	APIKeyTypeDev  APIKeyType = "dev"
+	APIKeyTypeProd APIKeyType = "prod"
+)
+
+func NewClient(APIKey string, keyType APIKeyType, customHTTPClient *http.Client) *Client {
+	var reqPerMinute int
+	switch keyType {
+	case APIKeyTypeDev:
+		reqPerMinute = reqPerMinuteDev
+	case APIKeyTypeProd:
+		reqPerMinute = reqPerMinuteProd
+	default:
+		reqPerMinute = reqPerMinuteDev
+	}
 	if customHTTPClient == nil {
 		customHTTPClient = cleanhttp.DefaultPooledClient()
 	}
 	return &Client{
-		apiKey:     apiKey,
+		apiKey:     APIKey,
 		throughput: rate.NewLimiter(rate.Limit(reqPerMinute)/rate.Limit(time.Minute/time.Second), reqPerMinute),
 		httpClient: customHTTPClient,
 	}
