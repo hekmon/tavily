@@ -20,9 +20,8 @@ const (
 	OpenAISearchToolParamCategory = "category"
 	OpenAISearchToolParamNewsDays = "news_days"
 
-	OpenAIExtractToolName       = "tavily_web_extract"
-	OpenAIExtractToolParamURL   = "url"
-	OpenAIExtractToolParamDepth = "depth"
+	OpenAIExtractToolName     = "tavily_web_extract"
+	OpenAIExtractToolParamURL = "url"
 
 	SystemPrompt = `You are a helpful assistant.
 Your primary goal is to answer user queries to the best of your capacities, focusing on providing accurate, relevant, and useful information.
@@ -171,22 +170,46 @@ func (oaitth OpenAITavilyToolsHelper) GetExtractToolParam() openai.ChatCompletio
 			},
 			Parameters: openai.FunctionParameters{
 				"type": "object",
-				"properties": map[string]interface{}{
+				"properties": map[string]any{
 					OpenAIExtractToolParamURL: map[string]any{
 						"type":        "string",
 						"description": "The URL you want to extract content from",
-					},
-					OpenAIExtractToolParamDepth: map[string]any{
-						"type": "string",
-						"description": fmt.Sprintf(
-							"The level of depth you want for your search. Use %q for better results if the query or its subject is complex. The default level is %q.",
-							tavily.SearchQueryDepthAdvanced, tavily.SearchQueryDepthBasic,
-						),
-						"enum": []string{string(tavily.SearchQueryDepthBasic), string(tavily.SearchQueryDepthAdvanced)},
 					},
 				},
 				"required": []string{OpenAIExtractToolParamURL},
 			},
 		},
 	}
+}
+
+func (oaitth OpenAITavilyToolsHelper) Extract(ctx context.Context, toolCallID, params string) (toolResultMsg openai.ChatCompletionToolMessageParam, err error) {
+	// First parse the parameters
+	parsedParams := make(map[string]string, 1)
+	if err = json.Unmarshal([]byte(params), &parsedParams); err != nil {
+		err = fmt.Errorf("failed to parse parameters: %w", err)
+		return
+	}
+	// Extract
+	resp, err := oaitth.client.Extract(ctx, tavily.ExtractRequest{
+		URLs:         []string{parsedParams[OpenAIExtractToolParamURL]},
+		ExtractDepth: tavily.ExtractRequestDepthAdvanced,
+	})
+	if err != nil {
+		err = fmt.Errorf("failed to perform tavily extract: %w", err)
+		return
+	}
+	// Return the answer
+	results := make([]openai.ChatCompletionContentPartTextParam, len(resp.Results))
+	for i, result := range resp.Results {
+		results[i] = openai.ChatCompletionContentPartTextParam{
+			Text: result.RawContent,
+		}
+	}
+	toolResultMsg = openai.ChatCompletionToolMessageParam{
+		Content: openai.ChatCompletionToolMessageParamContentUnion{
+			OfArrayOfContentParts: results,
+		},
+		ToolCallID: toolCallID,
+	}
+	return
 }

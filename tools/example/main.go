@@ -22,7 +22,8 @@ var (
 const (
 	// question = "What is Tavily? What do they offer? Be specific and do not omit anything. Did they announce something recently?"
 	// question = "Why is the launch of the NVIDIA GeForce RTX 5000 serie so catastrophic?"
-	question = "Who are you? What are you capable of?"
+	// question = "Who are you? What are you capable of?"
+	question = "Summarize me this https://qwen3.org/"
 )
 
 func main() {
@@ -86,6 +87,18 @@ func startConversation(question string) (err error) {
 					for _, response := range msg.Content.OfArrayOfContentParts {
 						fmt.Println(response.Text)
 					}
+				case tavilytools.OpenAIExtractToolName:
+					msg, err := TavilyToolsHelper.Extract(ctx, tool.ID, tool.Function.Arguments)
+					if err != nil {
+						return fmt.Errorf("failed to activate Tavily OpenAIExtractTool: %w", err)
+					}
+					messages = append(messages, openai.ChatCompletionMessageParamUnion{
+						OfTool: &msg,
+					})
+					fmt.Println("tavily answer:")
+					for _, response := range msg.Content.OfArrayOfContentParts {
+						fmt.Println(response.Text)
+					}
 				default:
 					return fmt.Errorf("failed to handle OpenAISearchTool: %w", err)
 				}
@@ -105,7 +118,8 @@ func startConversation(question string) (err error) {
 func newChatCompletion(ctx context.Context, client openai.Client, messages []openai.ChatCompletionMessageParamUnion) (*openai.ChatCompletion, error) {
 	return client.Chat.Completions.New(ctx,
 		openai.ChatCompletionNewParams{
-			Model:       "Qwen2.5-72B",
+			// Model:       "Qwen2.5-72B",
+			Model:       "IG1 GPT",
 			Messages:    messages,
 			Tools:       availableTools(),
 			MaxTokens:   param.Opt[int64]{Value: 8192}, // max of Qwen2.5
@@ -120,5 +134,6 @@ func newChatCompletion(ctx context.Context, client openai.Client, messages []ope
 func availableTools() []openai.ChatCompletionToolParam {
 	return []openai.ChatCompletionToolParam{
 		TavilyToolsHelper.GetSearchToolParam(),
+		TavilyToolsHelper.GetExtractToolParam(),
 	}
 }
