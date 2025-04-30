@@ -11,11 +11,12 @@ import (
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/packages/param"
 )
 
 var (
-	OAIClient  *openai.Client
-	TavilyTool tavilytools.OpenAISearchTool
+	OAIClient         openai.Client
+	TavilyToolsHelper *tavilytools.OpenAITavilyToolsHelper
 )
 
 const (
@@ -29,7 +30,8 @@ func main() {
 		option.WithAPIKey(llmKey),
 		option.WithBaseURL(baseURL),
 	)
-	TavilyTool.TavilyClient = tavily.NewClient(tavilyKey, nil)
+	tavilyClient := tavily.NewClient(tavilyKey, tavily.APIKeyTypeDev, nil)
+	TavilyToolsHelper = tavilytools.NewTavilyToolsHelper(tavilyClient)
 
 	// Start
 	err := startConversation(question)
@@ -60,10 +62,10 @@ func startConversation(question string) (err error) {
 			return fmt.Errorf("unexpected number of choices: %d", len(chatCompletion.Choices))
 		}
 		response := chatCompletion.Choices[0]
-		messages = append(messages, response.Message)
+		messages = append(messages, response.Message.ToParam())
 		// Act based on response
 		switch response.FinishReason {
-		case openai.ChatCompletionChoicesFinishReasonToolCalls:
+		case "tool_calls":
 			fmt.Println("Received", len(response.Message.ToolCalls), "tool call request(s)")
 			fmt.Println()
 			// TODO: parallelize to speed up time to first token for the user
@@ -72,21 +74,23 @@ func startConversation(question string) (err error) {
 				fmt.Println("tool call:", tool.Function.Name, tool.Function.Arguments, tool.ID)
 				switch tool.Function.Name {
 				case tavilytools.OpenAISearchToolName:
-					msg, err := TavilyTool.Search(ctx, tool.ID, tool.Function.Arguments)
+					msg, err := TavilyToolsHelper.Search(ctx, tool.ID, tool.Function.Arguments)
 					if err != nil {
 						return fmt.Errorf("failed to activate Tavily OpenAISearchTool: %w", err)
 					}
-					messages = append(messages, msg)
+					messages = append(messages, openai.ChatCompletionMessageParamUnion{
+						OfTool: &msg,
+					})
 					fmt.Println("tavily answer:")
-					for _, response := range msg.Content.Value {
-						fmt.Println(response.Text.Value)
+					for _, response := range msg.Content.OfArrayOfContentParts {
+						fmt.Println(response.Text)
 					}
 				default:
 					return fmt.Errorf("failed to handle OpenAISearchTool: %w", err)
 				}
 				fmt.Println()
 			}
-		case openai.ChatCompletionChoicesFinishReasonStop:
+		case string(openai.CompletionChoiceFinishReasonStop):
 			fmt.Println("---------8<----------")
 			fmt.Println("Response:")
 			fmt.Println(response.Message.Content)
@@ -97,16 +101,17 @@ func startConversation(question string) (err error) {
 	}
 }
 
-func newChatCompletion(ctx context.Context, client *openai.Client, messages []openai.ChatCompletionMessageParamUnion) (*openai.ChatCompletion, error) {
+func newChatCompletion(ctx context.Context, client openai.Client, messages []openai.ChatCompletionMessageParamUnion) (*openai.ChatCompletion, error) {
 	return client.Chat.Completions.New(ctx,
 		openai.ChatCompletionNewParams{
 			// Model:       openai.F("Qwen2.5-72B"),
-			Model:       openai.F("IG1 GPT"),
-			Messages:    openai.F(messages),
-			Tools:       openai.F(availableTools()),
-			N:           openai.F(int64(1)),
-			Temperature: openai.F(0.7), // recommended by Qwen2.5
-			TopP:        openai.F(0.8), // recommended by Qwen2.5
+			Model:       "IG1 GPT",
+			Messages:    messages,
+			Tools:       availableTools(),
+			MaxTokens:   param.Opt[int64]{Value: 8192}, // max of Qwen2.5
+			N:           param.Opt[int64]{Value: 1},
+			Temperature: param.Opt[float64]{Value: 0.7}, // recommended by Qwen2.5
+			TopP:        param.Opt[float64]{Value: 0.8}, // recommended by Qwen2.5
 		},
 		option.WithJSONSet("repetition_penalty", strconv.FormatFloat(1.05, 'f', -1, 64)), // recommended by Qwen2.5
 	)
@@ -114,6 +119,6 @@ func newChatCompletion(ctx context.Context, client *openai.Client, messages []op
 
 func availableTools() []openai.ChatCompletionToolParam {
 	return []openai.ChatCompletionToolParam{
-		TavilyTool.GetSearchToolParam(),
+		TavilyToolsHelper.GetSearchToolParam(),
 	}
 }
