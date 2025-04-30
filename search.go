@@ -49,7 +49,7 @@ func (sq SearchQuery) Validate() error {
 	}
 	// Max Results
 	switch {
-	case sq.MaxResults <= 0:
+	case sq.MaxResults < 0:
 		return errors.New("max_results must be a non-negative integer")
 	case sq.MaxResults > SearchMaxPossibleResults:
 		return fmt.Errorf("max_results must be less than or equal to %d", SearchMaxPossibleResults)

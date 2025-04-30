@@ -21,7 +21,8 @@ var (
 
 const (
 	// question = "What is Tavily? What do they offer? Be specific and do not omit anything. Did they announce something recently?"
-	question = "Why is the launch of the NVIDIA GeForce RTX 5000 serie so catastrophic? search the web"
+	// question = "Why is the launch of the NVIDIA GeForce RTX 5000 serie so catastrophic?"
+	question = "Who are you? What are you capable of?"
 )
 
 func main() {
@@ -104,8 +105,7 @@ func startConversation(question string) (err error) {
 func newChatCompletion(ctx context.Context, client openai.Client, messages []openai.ChatCompletionMessageParamUnion) (*openai.ChatCompletion, error) {
 	return client.Chat.Completions.New(ctx,
 		openai.ChatCompletionNewParams{
-			// Model:       openai.F("Qwen2.5-72B"),
-			Model:       "IG1 GPT",
+			Model:       "Qwen2.5-72B",
 			Messages:    messages,
 			Tools:       availableTools(),
 			MaxTokens:   param.Opt[int64]{Value: 8192}, // max of Qwen2.5
