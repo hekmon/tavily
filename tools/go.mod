@@ -6,7 +6,7 @@ replace github.com/hekmon/tavily => ..
 
 require (
 	github.com/hekmon/tavily v1.0.0
-	github.com/openai/openai-go v0.1.0-beta.10
+	github.com/openai/openai-go v1.1.0
 )
 
 require (
