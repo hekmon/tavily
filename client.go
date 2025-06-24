@@ -2,7 +2,9 @@ package tavily
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-cleanhttp"
@@ -25,35 +27,32 @@ const (
 	ReqPerMinuteProd = 1000
 )
 
-// APIKeyType represents the type of API key used.
-type APIKeyType string
-
 const (
-	// APIKeyTypeDev represents a development API key.
-	APIKeyTypeDev APIKeyType = "dev"
-	// APIKeyTypeProd represents a production API key.
-	APIKeyTypeProd APIKeyType = "prod"
+	devKeyPrefix  = "tvly-dev-"
+	prodKeyPrefix = "tvly-prod-"
 )
 
-func NewClient(APIKey string, keyType APIKeyType, customHTTPClient *http.Client) Client {
+func NewClient(APIKey string, customHTTPClient *http.Client) (c Client, err error) {
 	var reqPerMinute int
-	switch keyType {
-	case APIKeyTypeDev:
+	switch {
+	case strings.HasPrefix(APIKey, devKeyPrefix):
 		reqPerMinute = ReqPerMinuteDev
-	case APIKeyTypeProd:
+	case strings.HasPrefix(APIKey, prodKeyPrefix):
 		reqPerMinute = ReqPerMinuteProd
 	default:
-		reqPerMinute = ReqPerMinuteDev
+		err = errors.New("APIKey does not seem to be a valid Tavily API key")
+		return
 	}
 	if customHTTPClient == nil {
 		customHTTPClient = cleanhttp.DefaultPooledClient()
 	}
-	mc := &mainClient{
+	mc := mainClient{
 		apiKey:     APIKey,
 		throughput: rate.NewLimiter(rate.Limit(reqPerMinute)/rate.Limit(time.Minute/time.Second), reqPerMinute),
 		httpClient: customHTTPClient,
 	}
-	return mc.NewSession()
+	c = mc.NewSession()
+	return
 }
 
 type mainClient struct {
