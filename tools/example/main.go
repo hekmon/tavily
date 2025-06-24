@@ -6,8 +6,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/hekmon/tavily"
-	tavilytools "github.com/hekmon/tavily/tools"
+	"github.com/hekmon/tavily/v2"
+	tavilytools "github.com/hekmon/tavily/v2/tools"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"

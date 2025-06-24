@@ -1,11 +1,11 @@
-module github.com/hekmon/tavily/tools
+module github.com/hekmon/tavily/v2/tools
 
 go 1.24.2
 
-replace github.com/hekmon/tavily => ..
+replace github.com/hekmon/tavily/v2 => ..
 
 require (
-	github.com/hekmon/tavily v1.0.0
+	github.com/hekmon/tavily/v2 v2.0.0
 	github.com/openai/openai-go v1.7.0
 )
 

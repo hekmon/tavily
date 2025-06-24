@@ -1,4 +1,4 @@
-module github.com/hekmon/tavily
+module github.com/hekmon/tavily/v2
 
 go 1.23.4
 

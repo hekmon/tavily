@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hekmon/tavily"
+	"github.com/hekmon/tavily/v2"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/packages/param"
