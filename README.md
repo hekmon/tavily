@@ -1,6 +1,6 @@
 # Tavily Go bindings
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/hekmon/tavily.svg)](https://pkg.go.dev/github.com/hekmon/tavily) [![Go report card](https://goreportcard.com/badge/github.com/hekmon/tavily)](https://goreportcard.com/report/github.com/hekmon/tavily)
+[![Go Reference](https://pkg.go.dev/badge/github.com/hekmon/tavily.svg)](https://pkg.go.dev/github.com/hekmon/tavily/v2) [![Go report card](https://goreportcard.com/badge/github.com/hekmon/tavily)](https://goreportcard.com/report/github.com/hekmon/tavily)
 
 These Go bindings implements the [Tavily REST API](https://docs.tavily.com/docs/rest-api/api-reference) for the [Tavily](https://tavily.com/) SaaS service. Tavily offers APIs to search the web and retreive results in a simpe and clean way. It is first intended for LLM Agents but can be used for other purposes as well.
 
@@ -38,7 +38,7 @@ The client will track current session API credits usage thru its stats method/ob
 ### Installation
 
 ```bash
-go get -v github.com/hekmon/tavily
+go get -v github.com/hekmon/tavily/v2
 ```
 
 ### Example
@@ -47,26 +47,26 @@ go get -v github.com/hekmon/tavily
 package main
 
 import (
-	"context"
+    "context"
 
-	"github.com/hekmon/tavily"
+    "github.com/hekmon/tavily"
 )
 
 func main() {
-	client := tavily.NewClient("<your-tavily-API-key>", tavily.APIKeyTypeDev, nil)
-	answer, err := client.Search(context.TODO(), tavily.SearchQuery{
-		Query:                    "What is Tavily ?",
-		SearchDepth:              tavily.SearchDepthAdvanced,     // optional
-		Topic:                    tavily.SearchQueryTopicGeneral, // optional
-		MaxResults:               3,                              // optional
-		IncludeImages:            true,                           // optional
-		IncludeImageDescriptions: true,                           // optional
-		IncludeAnswer:            true,                           // optional but recommended for LLMs agents
+    client := tavily.NewClient("<your-tavily-API-key>", tavily.APIKeyTypeDev, nil)
+    answer, err := client.Search(context.TODO(), tavily.SearchQuery{
+        Query:                    "What is Tavily ?",
+        SearchDepth:              tavily.SearchDepthAdvanced,     // optional
+        Topic:                    tavily.SearchQueryTopicGeneral, // optional
+        MaxResults:               3,                              // optional
+        IncludeImages:            true,                           // optional
+        IncludeImageDescriptions: true,                           // optional
+        IncludeAnswer:            true,                           // optional but recommended for LLMs agents
         // ... others optional params exist
-	})
-	if err != nil {
-		panic(err)
-	}
+    })
+    if err != nil {
+        panic(err)
+    }
     // Do something with the answer
     // ...
 }
