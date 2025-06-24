@@ -32,12 +32,15 @@ func main() {
 		option.WithAPIKey(llmKey),
 		option.WithBaseURL(baseURL),
 	)
-	tavilyClient := tavily.NewClient(tavilyKey, tavily.APIKeyTypeDev, nil)
+	tavilyClient, err := tavily.NewClient(tavilyKey, nil)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
 	TavilyToolsHelper = tavilytools.NewTavilyToolsHelper(tavilyClient)
 
 	// Start
-	err := startConversation(question)
-	if err != nil {
+	if err = startConversation(question); err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
