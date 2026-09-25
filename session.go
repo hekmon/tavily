@@ -18,7 +18,7 @@ func (s *session) Search(ctx context.Context, query SearchQuery) (answer SearchA
 		return
 	}
 	switch query.SearchDepth {
-	case "", SearchQueryDepthBasic:
+	case "", SearchQueryDepthBasic, SearchQueryDepthFast, SearchQueryDepthUltraFast:
 		s.statsCounter.basicSearches.Add(1)
 	case SearchQueryDepthAdvanced:
 		s.statsCounter.advancedSearches.Add(1)

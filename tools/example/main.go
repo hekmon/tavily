@@ -6,8 +6,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/hekmon/tavily/v2"
-	tavilytools "github.com/hekmon/tavily/v2/tools"
+	"github.com/hekmon/tavily/v3"
+	tavilytools "github.com/hekmon/tavily/v3/tools"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -103,7 +103,7 @@ func startConversation(question string) (err error) {
 						fmt.Println(response.Text)
 					}
 				default:
-					return fmt.Errorf("failed to handle OpenAISearchTool: %w", err)
+					return fmt.Errorf("unknown tool: %s", tool.Function.Name)
 				}
 				fmt.Println()
 			}

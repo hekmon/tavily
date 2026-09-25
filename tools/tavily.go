@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/hekmon/tavily/v2"
+	"github.com/hekmon/tavily/v3"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/packages/param"
@@ -92,7 +93,7 @@ func (oaitth OpenAITavilyToolsHelper) GetSearchToolParam() openai.ChatCompletion
 							"The category for the search. Use %q to search for recent news articles. Use the %q parameter to specify the number of days to look back when searching for news articles. The default category is %q, which searches across general topics.",
 							tavily.SearchQueryTopicNews, OpenAISearchToolParamNewsDays, tavily.SearchQueryTopicGeneral,
 						),
-						"enum": []string{string(tavily.SearchQueryTopicGeneral), string(tavily.SearchQueryTopicNews)},
+						"enum": []string{string(tavily.SearchQueryTopicGeneral), string(tavily.SearchQueryTopicNews), string(tavily.SearchQueryTopicFinance)},
 					},
 					OpenAISearchToolParamNewsDays: map[string]any{
 						"type": "string",
@@ -126,14 +127,18 @@ func (oaitth OpenAITavilyToolsHelper) Search(ctx context.Context, toolCallID, pa
 			newsDays = defaultSearchNewsDays
 		}
 	}
-	// Execute the search
-	resp, err := oaitth.client.Search(ctx, tavily.SearchQuery{
+	// Prepare the search query
+	searchQuery := tavily.SearchQuery{
 		Query:       parsedParams[OpenAISearchToolParamQuery],
 		SearchDepth: tavily.SearchQueryDepthAdvanced, // to have a meaningfull content, Advanced is required. Another solution is to query Basic with raw content but this will consome way more tokens.
 		Topic:       tavily.SearchQueryTopic(parsedParams[OpenAISearchToolParamCategory]),
-		Days:        newsDays,
 		MaxResults:  oaitth.MaxResults,
-	})
+	}
+	if newsDays > 0 {
+		searchQuery.StartDate = time.Now().UTC().AddDate(0, 0, -newsDays).Format("2006-01-02")
+	}
+	// Execute the search
+	resp, err := oaitth.client.Search(ctx, searchQuery)
 	if err != nil {
 		err = fmt.Errorf("failed to perform tavily search: %w", err)
 		return
@@ -164,7 +169,7 @@ func (oaitth OpenAITavilyToolsHelper) GetExtractToolParam() openai.ChatCompletio
 	return openai.ChatCompletionToolParam{
 		// Type: constant.Function(""),
 		Function: shared.FunctionDefinitionParam{
-			Name: OpenAISearchToolName,
+			Name: OpenAIExtractToolName,
 			Description: param.Opt[string]{
 				Value: "Extract content from a given URL",
 			},
