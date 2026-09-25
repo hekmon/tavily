@@ -71,13 +71,13 @@ func (c *mainClient) request(ctx context.Context, endpoint string, payload, resp
 		http.StatusMethodNotAllowed, http.StatusUnprocessableEntity, http.StatusTooManyRequests,
 		http.StatusInternalServerError, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
 		// Handle known errors
-		body, err := io.ReadAll(resp.Body)
+		respBody, err := io.ReadAll(resp.Body)
 		if err != nil {
-			body = []byte(fmt.Sprintf("failed to read response body: %s", err))
+			respBody = fmt.Appendf(nil, "failed to read response body: %v", err)
 		}
 		return APIError{
 			Code: resp.StatusCode,
-			Body: body,
+			Body: respBody,
 		}
 	default:
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
